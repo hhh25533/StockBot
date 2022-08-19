@@ -17,10 +17,10 @@ jobs:
 
     - name: relpace variable
       uses: microsoft/variable-substitution@v1 
-        with:
-          files: 'src/*.ini'
-        env:
-          ACCESS_TOKEN: ${{ secrets.TELEGREAM_TOKEN }}
+      with:
+        files: 'src/*.ini'
+      env:
+        ACCESS_TOKEN: ${{ secrets.TELEGREAM_TOKEN }}
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
