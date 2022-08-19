@@ -1,0 +1,13 @@
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+FROM python:3.9-alpine as base
+WORKDIR /app
+
+RUN pip install python-telegram-bot
+RUN pip install lxml
+RUN pip install requests
+RUN pip install twstock
+
+COPY . .
+WORKDIR /app/src
+
+CMD [ "python", "pythonStock.py" ]
