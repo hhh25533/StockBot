@@ -15,12 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: relpace variable
-      uses: jwsi/secret-parser@v1
-      with:
-        filename: ./src/config.ini
-        secret-name: ACCESS_TOKEN
-        secret-value: ${{ secrets.TELEGREAM_TOKEN }}    
+    - name: Create ini file
+      run: |
+        cat << EOF >> config.ini
+        ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
+        EOF
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
