@@ -23,6 +23,7 @@ jobs:
         EOF
     
     - name: Get current date 
+      id: date
       run: echo "::set-output name=date::$(date +'%Y%m%d')"
 
     - uses: microsoft/variable-substitution@v1 
