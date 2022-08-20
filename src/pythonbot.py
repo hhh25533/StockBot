@@ -11,7 +11,6 @@ import fetchCode
 # Load data from config.ini file
 config = configparser.ConfigParser()
 config.read('config.ini')
-print(config['TELEGRAM']['ACCESS_TOKEN'])
 
 PACKAGE_DIRECTORY = Path.cwd().parent.joinpath('docs')
 TPEX_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('tpex_equities.csv')
