@@ -21,7 +21,10 @@ jobs:
         [TELEGRAM]
         ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
         EOF
-        
+    
+    - name: Get current date 
+      run: echo "::set-output name=date::$(date +'%Y%m%d')"
+
     - uses: microsoft/variable-substitution@v1 
       with:
           files: 'deploy/stockbot/values.yaml'
@@ -29,7 +32,7 @@ jobs:
           serviceName: ${{ secrets.SERVICE_NAME }}
           namespace: ${{ secrets.NAMESPACE }}
           replicaCount: ${{ secrets.REPLICACOUNT }}
-          deploytime: $(date +'%Y%m%d')
+          deploytime: ${{ steps.date.outputs.date }}
           image.repository: ${{ secrets.IMAGE_REPOSITORY }}
           deployment.resources.limits.cpu: ${{ secrets.RESOURCES_LIMITS_CPU }}
           deployment.resources.limits.memory: ${{ secrets.RESOURCES_LIMITS_MEMORY }}
