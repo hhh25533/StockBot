@@ -10,4 +10,4 @@ RUN pip install twstock
 COPY . .
 WORKDIR /app/src
 
-CMD [ "python", "pythonStock.py" ]
+CMD [ "python", "pythonbot.py" ]

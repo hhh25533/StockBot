@@ -32,4 +32,4 @@ jobs:
         context: ./
         file: ./build/dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stock:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:latest
