@@ -1,0 +1,47 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get current date 
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y%m%d')"
+
+    # - uses: microsoft/variable-substitution@v1 
+    #   with:
+    #       files: 'deploy/stockbot/values.yaml'
+    #   env:
+    #       serviceName: ${{ secrets.SERVICE_NAME }}
+    #       namespace: ${{ secrets.NAMESPACE }}
+    #       replicaCount: ${{ secrets.REPLICACOUNT }}
+    #       deploytime: ${{ steps.date.outputs.date }}
+    #       image.repository: ${{ secrets.IMAGE_REPOSITORY }}
+    #       deployment.resources.limits.cpu: ${{ secrets.RESOURCES_LIMITS_CPU }}
+    #       deployment.resources.limits.memory: ${{ secrets.RESOURCES_LIMITS_MEMORY }}
+    #       deployment.resources.requests.cpu: ${{ secrets.RESOURCES_REQUESTS_CPU }}
+    #       deployment.resources.requests.memory: ${{ secrets.RESOURCES_REQUESTS_MEMORY }}
+    
+     - uses: microsoft/variable-substitution@v1 
+       with:
+           files: 'deploy/docker-compose.yaml'
+       env:
+           services.stockbot.image: ${{ secrets.IMAGE_REPOSITORY }}
+    
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script:  docker-compose -f deploy/docker-compose.yaml up -d
