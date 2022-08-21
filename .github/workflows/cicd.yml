@@ -54,11 +54,11 @@ jobs:
     #       deployment.resources.requests.cpu: ${{ secrets.RESOURCES_REQUESTS_CPU }}
     #       deployment.resources.requests.memory: ${{ secrets.RESOURCES_REQUESTS_MEMORY }}
     
-     - uses: microsoft/variable-substitution@v1 
-       with:
-           files: 'deploy/docker-compose.yaml'
-       env:
-           services.stockbot.image: ${{ secrets.IMAGE_REPOSITORY }}
+    - uses: microsoft/variable-substitution@v1 
+      with:
+          files: 'deploy/docker-compose.yaml'
+      env:
+          services.stockbot.image: ${{ secrets.IMAGE_REPOSITORY }}
     
     - name: executing remote ssh commands using password
       uses: appleboy/ssh-action@master
