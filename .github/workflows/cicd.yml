@@ -29,7 +29,8 @@ jobs:
         file: ./build/dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:latest
-  uploadpackage:
+  upload-package:
+    if: ${{ success() }}
     needs: build
     runs-on: ubuntu-latest
     steps:
