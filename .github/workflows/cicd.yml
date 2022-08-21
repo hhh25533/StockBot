@@ -61,16 +61,16 @@ jobs:
           services.stockbot.image: ${{ secrets.IMAGE_REPOSITORY }}
     
     - name: copy file via ssh password
-      uses: appleboy/scp-action@master
+      uses: garygrossgarten/github-action-scp@release
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        source: "deploy/docker-compose.yaml"
-        overwrite: true
-        target: "/project/stockbot"
-
+        local: "deploy/docker-compose.yaml"
+        remote: "/project/stockbot"
+        rmRemote: true
+        
     - name: executing remote ssh commands using password
       uses: appleboy/ssh-action@master
       with:
@@ -78,5 +78,5 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script:  docker-compose -f deploy/docker-compose.yaml up -d
+        script:  sudo docker-compose -f deploy/docker-compose.yaml up -d
 
