@@ -77,6 +77,5 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script:  cp -i 
-        docker-compose -f deploy/docker-compose.yaml up -d
+        script:  docker-compose -f deploy/docker-compose.yaml up -d
 
