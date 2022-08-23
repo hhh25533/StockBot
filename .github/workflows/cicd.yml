@@ -78,5 +78,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script:  sudo docker-compose -f deploy/docker-compose.yaml up -d
+        script:  
+        echo ${{ secrets.PASSWORD }} |
+        sudo -S docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
 
