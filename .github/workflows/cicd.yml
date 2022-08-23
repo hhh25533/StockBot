@@ -68,7 +68,7 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         source: "deploy/docker-compose.yaml"
-        target: "/project/stockbot"
+        target: "./project/stockbot"
         overwrite: true
 
     - name: executing remote ssh commands using password
