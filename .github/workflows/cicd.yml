@@ -26,7 +26,7 @@ jobs:
         context: ./
         file: ./build/dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:1.0
   upload-package:
     if: ${{ success() }}
     needs: build
