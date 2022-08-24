@@ -3,8 +3,6 @@ name: CICD
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -80,4 +78,5 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           echo "${{ secrets.PASSWORD }}" | sudo -S docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
+          
 

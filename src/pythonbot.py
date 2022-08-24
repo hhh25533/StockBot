@@ -1,5 +1,5 @@
 import telegram
-from telegram.ext import Updater, CommandHandler, commandhandler
+from telegram.ext import Updater, CommandHandler
 import json
 import configparser
 from types import SimpleNamespace
@@ -29,41 +29,56 @@ def quoted(update, context):
     # if update.message.from_user.id == YOUR_USER_ID_HERE:
     if True:
         stockId = update.message.text[7:].replace('\n', ' ')
-        stockInfo=getRealTimeStock(stockId)
+        stockInfo = getRealTimeStock(stockId)
+        upLow = ""
         if isinstance(stockInfo, str):
             return update.message.reply_text(stockInfo)
 
-        price=stockInfo[-1].a.split("_")[0]
+        buyPrice = stockInfo[-1].b
+        salsePrice = stockInfo[-1].a
 
-        if price=='-':
-            price=stockInfo[-1].y
+        realTimePrice = stockInfo[-1].z
+        openPrice = stockInfo[-1].o
+        yesterdayPrice = stockInfo[-1].y
 
-        rise=((float(price)-float(stockInfo[-1].y))/float(stockInfo[-1].y))*100
+        if buyPrice == "-":
+            realTimePrice = stockInfo[-1].w
+        
+        if salsePrice == "-":
+            upLow = "🎊"
+            realTimePrice = stockInfo[-1].u
+        
+        print(realTimePrice)
+        print(yesterdayPrice)
 
-        upLow=""
-        if rise<0:
-            upLow="📉"
-        if rise>0:
-            upLow="📈"
+        rise = ((float(realTimePrice) - float(yesterdayPrice)) / float(yesterdayPrice)) * 100
+        
+        print(rise)
 
-        reStr="{id} {name} \n當盤成交價 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} ".format(id=stockInfo[-1].c,name=stockInfo[-1].n,realPrice=float(price),priceRise=rise,uplow=upLow)
+        
+        if rise < 0:
+            upLow = "📉"
+        if rise > 0:
+            upLow += "📈"
+
+        reStr = "{id} {name} 開盤：{openPrice:.2f} \n當盤成交價 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} ".format(id=stockInfo[-1].c,name=stockInfo[-1].n,openPrice=float(openPrice),realPrice=float(realTimePrice),priceRise=rise,uplow=upLow)
 
         update.message.reply_text(reStr)
 
 def tse(update, context):
         tseInfo=getRealTimeTse()
-        realTime=tseInfo[-1].z
+        
+        realTime = tseInfo[-1].z
+        openPrice = tseInfo[-1].o
+        yesterdayPrice = tseInfo[-1].y
 
-        if realTime=='-':
-            price=tseInfo[-1].y
+        rise = ((float(realTime)-float(yesterdayPrice))/float(yesterdayPrice))*100
 
-        rise=((float(realTime)-float(tseInfo[-1].y))/float(tseInfo[-1].y))*100
-
-        upLow=""
-        if rise<0:
-            upLow="📉"
-        if rise>0:
-            upLow="📈"
+        upLow = ""
+        if rise < 0:
+            upLow = "📉"
+        if rise > 0:
+            upLow = "📈"
 
         reStr="大盤 {name} \n大盤指數 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} ".format(name=tseInfo[-1].n,realPrice=float(realTime),priceRise=rise,uplow=upLow)
 
