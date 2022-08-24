@@ -55,9 +55,3 @@ Table of Contents
 - Must use the meaningful branch name
 - Must using feature/ as feature branch name prefix
 
-## Continuous Integration
-### Adopt Jenkins 
-- Run [Jenkinsfile]() build spec file in repository
-### How To Trigger CI?
-- Trigger manually in [Jenkins]() and select your build parameter
-
