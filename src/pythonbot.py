@@ -48,7 +48,7 @@ def quoted(update, context):
             upLow = "🎊"
             realTimePrice = stockInfo[-1].u
         
-        if realTimePrice == "_":
+        if realTimePrice == "-":
             realTimePrice = stockInfo[-1].a.split("_")[0]
         
         rise = ((float(realTimePrice) - float(yesterdayPrice)) / float(yesterdayPrice)) * 100
