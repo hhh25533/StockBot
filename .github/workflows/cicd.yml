@@ -26,7 +26,7 @@ jobs:
         context: ./
         file: ./build/dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:1.0
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:1.3
   upload-package:
     if: ${{ success() }}
     needs: build
@@ -56,7 +56,7 @@ jobs:
       with:
           files: 'deploy/docker-compose.yaml'
       env:
-          services.stockbot.image: ${{ secrets.IMAGE_REPOSITORY }}
+          services.stockbot.image: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:1.3
     
     - name: copy file via ssh password
       uses: appleboy/scp-action@master
@@ -77,6 +77,6 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          echo "${{ secrets.PASSWORD }}" | sudo -S docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
+          echo "${{ secrets.PASSWORD }}" | sudo -S sh ./project/start.sh 
           
 
