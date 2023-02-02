@@ -5,8 +5,8 @@ on:
     branches: [ "main" ]
 
 env:
-  IMAGE_VERSION: 1.4.2
-  OLD_VERSION: 1.4.1
+  IMAGE_VERSION: 1.4.3
+  OLD_VERSION: 1.4.2
 
 jobs:
   build:
@@ -79,17 +79,6 @@ jobs:
         source: "deploy/docker-compose.yaml"
         target: "./project/stockbot"
         overwrite: true
-        
-    - name: copy file via ssh password
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
-        source: "deploy/start.sh"
-        target: "./project/stockbot"
-        overwrite: true
 
     - name: executing remote ssh commands using password
       uses: appleboy/ssh-action@master
@@ -99,6 +88,6 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          echo "${{ secrets.PASSWORD }}" | sudo -S sh ./project/start.sh
+          echo "${{ secrets.PASSWORD }}" | sudo -S docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d | sudo -S docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }} 
           
 
