@@ -5,8 +5,8 @@ on:
     branches: [ "main" ]
 
 env:
-  IMAGE_VERSION: 1.4.1
-  OLD_VERSION: 1.4
+  IMAGE_VERSION: 1.4.2
+  OLD_VERSION: 1.4.1
 
 jobs:
   build:
@@ -18,6 +18,13 @@ jobs:
         cat << EOF >> ./src/config.ini
         [TELEGRAM]
         ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
+        EOF
+    - name: Create start.sh
+      run: |
+        cat << EOF >> ./deploy/start.sh
+        docker-compose up -d
+        echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}"
+        docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}
         EOF
     - name: Login to DockerHub
       uses: docker/login-action@v2
@@ -72,6 +79,17 @@ jobs:
         source: "deploy/docker-compose.yaml"
         target: "./project/stockbot"
         overwrite: true
+        
+    - name: copy file via ssh password
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        source: "deploy/start.sh"
+        target: "./project/stockbot"
+        overwrite: true
 
     - name: executing remote ssh commands using password
       uses: appleboy/ssh-action@master
@@ -81,6 +99,6 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          echo "${{ secrets.PASSWORD }}" | sudo -S sh ./project/start.sh ${{ env.OLD_VERSION }}
+          echo "${{ secrets.PASSWORD }}" | sudo -S sh ./project/start.sh
           
 
