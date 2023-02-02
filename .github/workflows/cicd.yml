@@ -19,13 +19,7 @@ jobs:
         [TELEGRAM]
         ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
         EOF
-    - name: Create start.sh
-      run: |
-        cat << EOF >> ./deploy/start.sh
-        docker-compose up -d
-        echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}"
-        docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}
-        EOF
+        
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
@@ -91,7 +85,6 @@ jobs:
           cat << EOF >> ./project/stockbot/deploy/start.sh
           docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
           echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}"
-          docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}
           EOF
 
     - name: executing remote ssh commands using password
