@@ -89,7 +89,7 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cat << EOF >> ./project/stockbot/deploy/start.sh
-          docker-compose up -d
+          docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
           echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}"
           docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}
           EOF
