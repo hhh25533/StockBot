@@ -88,6 +88,20 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          echo "${{ secrets.PASSWORD }}" | sudo -S docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d | sudo -S docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }} 
+          cat << EOF >> ./project/stockbot/deploy/start.sh
+          docker-compose up -d
+          echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}"
+          docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ env.OLD_VERSION }}
+          EOF
+
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          echo "${{ secrets.PASSWORD }}" | sudo -S sh ./project/stockbot/deploy/start.sh
           
 
