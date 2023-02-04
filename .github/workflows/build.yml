@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMAGE_VERSION:
+        description: "docker image version"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create ini file
+      run: |
+        cat << EOF >> ./src/config.ini
+        [TELEGRAM]
+        ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
+        EOF
+    
+    - uses: microsoft/variable-substitution@v1 
+      with:
+          files: 'deploy/docker-compose.yaml'
+      env:
+          services.stockbot.image: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.IMAGE_VERSION }}
+        
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}  
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        context: ./
+        file: ./build/dockerfile
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.IMAGE_VERSION }}
+  upload-package:
+    if: ${{ success() }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get current date 
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y%m%d')"
+
+    # - uses: microsoft/variable-substitution@v1 
+    #   with:
+    #       files: 'deploy/stockbot/values.yaml'
+    #   env:
+    #       serviceName: ${{ secrets.SERVICE_NAME }}
+    #       namespace: ${{ secrets.NAMESPACE }}
+    #       replicaCount: ${{ secrets.REPLICACOUNT }}
+    #       deploytime: ${{ steps.date.outputs.date }}
+    #       image.repository: ${{ secrets.IMAGE_REPOSITORY }}
+    #       deployment.resources.limits.cpu: ${{ secrets.RESOURCES_LIMITS_CPU }}
+    #       deployment.resources.limits.memory: ${{ secrets.RESOURCES_LIMITS_MEMORY }}
+    #       deployment.resources.requests.cpu: ${{ secrets.RESOURCES_REQUESTS_CPU }}
+    #       deployment.resources.requests.memory: ${{ secrets.RESOURCES_REQUESTS_MEMORY }}
+    
+    
