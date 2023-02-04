@@ -19,13 +19,7 @@ jobs:
         [TELEGRAM]
         ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
         EOF
-    
-    - uses: microsoft/variable-substitution@v1 
-      with:
-          files: 'deploy/docker-compose.yaml'
-      env:
-          services.stockbot.image: ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.IMAGE_VERSION }}
-        
+
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
