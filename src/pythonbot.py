@@ -17,7 +17,7 @@ TPEX_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('tpex_equities.csv')
 TWSE_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('twse_equities.csv')
 
 
-updater = Updater(config['TELEGRAM']['ACCESS_TOKEN'], use_context=True)
+updater = Updater(config['TELEGRAM']['ACCESS_TOKEN'])
 
 dispatcher = updater.dispatcher
 
