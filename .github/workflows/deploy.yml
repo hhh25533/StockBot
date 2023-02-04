@@ -46,7 +46,7 @@ jobs:
           rm -rf ./project/stockbot/deploy/start.sh
           cat << EOF >> ./project/stockbot/deploy/start.sh
           docker-compose -f ./project/stockbot/deploy/docker-compose.yaml up -d
-          echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.OLD_VERSION }}
+          echo "old version ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.OLD_VERSION }}"
           docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/stockbot:${{ github.event.inputs.OLD_VERSION }}
           EOF
 
