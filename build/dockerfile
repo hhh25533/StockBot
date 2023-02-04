@@ -2,7 +2,7 @@
 FROM python:3.9-alpine as base
 WORKDIR /app
 
-RUN pip install python-telegram-bot==11
+RUN pip install python-telegram-bot==12.0.0b1
 RUN pip install lxml
 RUN pip install requests
 RUN pip install twstock
