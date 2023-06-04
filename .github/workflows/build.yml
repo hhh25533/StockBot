@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Create ini file
+    - name: Create env file
       run: |
-        cat << EOF >> ./src/config.ini
+        cat << EOF >> ./src/env/.env
         [TELEGRAM]
-        ACCESS_TOKEN = ${{ secrets.TELEGREAM_TOKEN }}
+        TELEGRAM_ACCESS_TOKEN=${{ secrets.TELEGREAM_TOKEN }}
         EOF
 
     - name: Login to DockerHub

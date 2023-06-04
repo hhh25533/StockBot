@@ -7,11 +7,14 @@ import requests
 import readCSV
 from pathlib import Path
 import fetchCode
+from dotenv import load_dotenv
 
+load_dotenv("env/.env")
 PACKAGE_DIRECTORY = Path.cwd().parent.joinpath('docs')
 TPEX_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('tpex_equities.csv')
 TWSE_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('twse_equities.csv')
 print(os.getenv('TELEGRAM_ACCESS_TOKEN'))
+
 
 app = ApplicationBuilder().token(os.getenv('TELEGRAM_ACCESS_TOKEN')).build()
 
