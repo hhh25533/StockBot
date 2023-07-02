@@ -18,6 +18,8 @@ jobs:
         mkdir ./src/env
         cat << EOF >> ./src/env/.env
         TELEGRAM_ACCESS_TOKEN=${{ secrets.TELEGREAM_TOKEN }}
+        INFO_LOG_PATH=/data/vault/logs/
+        ERROR_LOG_PATH=/data/vault/logs/
         EOF
 
     - name: Login to DockerHub
