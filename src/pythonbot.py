@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formater = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-info_handler = logging.FileHandler(os.getenv('INFO_LOG_PATH')+'info_'+logname)
+info_handler = logging.FileHandler(str(os.getenv('INFO_LOG_PATH'))+'info_'+logname)
 info_handler.setLevel(logging.INFO)
 info_handler.setFormatter(formater)
 
-error_handler = logging.FileHandler(os.getenv('ERROR_LOG_PATH')+'error_'+logname)
+error_handler = logging.FileHandler(str(os.getenv('ERROR_LOG_PATH'))+'error_'+logname)
 error_handler.setLevel(logging.ERROR)
 error_handler.setFormatter(formater)
 
