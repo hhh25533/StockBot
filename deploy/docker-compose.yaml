@@ -2,15 +2,15 @@ version: '3.7'
 
 services:
   stockbot:
-    image: 
+    image: hhh255533/stockbot:1.6.0
     pull_policy: always
     volumes:
       - log-data:/data/vault/logs
 
 volumes:
-  postgres-data:
+  log-data:
     driver: local
     driver_opts:
       type: 'none'
       o: 'bind'
-      device: '/Users/davidtin/project/StockBot/logs'
+      device: '/home/david/project/stockbot-logs'
