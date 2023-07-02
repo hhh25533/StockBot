@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import logging
 from datetime import datetime
 
+load_dotenv("env/.env")
+
 logname = datetime.strftime(datetime.now(), "%Y%m%d")+".log"
 
 logger = logging.getLogger(__name__)
@@ -24,9 +26,7 @@ error_handler.setFormatter(formater)
 logger.addHandler(error_handler)
 logger.addHandler(info_handler)
 
-load_dotenv("env/.env")
 
-print(os.getenv('TELEGRAM_ACCESS_TOKEN'))
 logger.info("Bot is running")
 
 app = ApplicationBuilder().token(os.getenv('TELEGRAM_ACCESS_TOKEN')).build()
@@ -35,7 +35,7 @@ app = ApplicationBuilder().token(os.getenv('TELEGRAM_ACCESS_TOKEN')).build()
 # 傳送訊息給使用者
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
-        raise Exception('test')
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="歡迎使用股票報價系統 \n 基本使用方法:\n 1. /price 股票代號 (查詢股價)\n 2./odd_price 股票代號 (零股報價)\n 3. /tse 大盤指數"
