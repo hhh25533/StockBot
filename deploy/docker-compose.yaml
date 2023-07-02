@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   stockbot:
-    image: hhh255533/stockbot:1.6.0
+    image:
     pull_policy: always
     volumes:
       - log-data:/data/vault/logs
