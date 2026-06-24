@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import fetchCode
 import counting
+import finnhub_client
 from dotenv import load_dotenv
 import logging
 
@@ -35,7 +36,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="歡迎使用股票報價系統 \n 基本使用方法:\n 1. /price 股票代號 (查詢股價)\n 2./odd_price 股票代號 (零股報價)\n 3. /tse 大盤指數"
+            text="歡迎使用股票報價系統 \n 基本使用方法:\n 1. /price 股票代號 (查詢股價)\n 2./odd_price 股票代號 (零股報價)\n 3. /tse 大盤指數\n 4. /usprice 美股代號 (查詢美股股價)"
         )
 
     except Exception as e:
@@ -101,6 +102,20 @@ async def tse(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.error(e, exc_info=True)
 
 
+async def us_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        symbol = " ".join(context.args)
+        us_info = finnhub_client.get_us_stock_quote(symbol)
+        if isinstance(us_info, str):
+            await update.message.reply_text(us_info)
+            return
+
+        await update.message.reply_text(finnhub_client.generate_us_response(us_info))
+    except Exception as e:
+        logger.error('us_price error')
+        logger.error(e, exc_info=True)
+
+
 async def update_csv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         fetchCode.update_codes()
@@ -114,6 +129,7 @@ app.add_handler(CommandHandler("start", start))  # 把此 Handler 加入派送�
 app.add_handler(CommandHandler("price", quoted))
 app.add_handler(CommandHandler("odd_price", odd_quoted))
 app.add_handler(CommandHandler("tse", tse))
+app.add_handler(CommandHandler("usprice", us_price))
 app.add_handler(CommandHandler("updateCsv", update_csv))
 
 app.run_polling()  # 開始推送任務
