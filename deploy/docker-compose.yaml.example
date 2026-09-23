@@ -1,0 +1,13 @@
+services:
+  stockbot:
+    image: hhh255533/stockbot:2.1.0
+    container_name: stockbot
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      TELEGRAM_ACCESS_TOKEN: 
+      FINNHUB_API_KEY: 
+      INFO_LOG_PATH: /data/vault/logs/
+      ERROR_LOG_PATH: /data/vault/logs/
+    volumes:
+      - ${STOCKBOT_LOG_DIR:-/share/Container/stockbot/logs}:/data/vault/logs

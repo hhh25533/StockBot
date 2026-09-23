@@ -13,16 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - name: Create env file
-      run: |
-        mkdir ./src/env
-        cat << EOF >> ./src/env/.env
-        TELEGRAM_ACCESS_TOKEN=${{ secrets.TELEGREAM_TOKEN }}
-        FINNHUB_API_KEY=${{ secrets.FINNHUB_API_KEY }}
-        INFO_LOG_PATH=/data/vault/logs/
-        ERROR_LOG_PATH=/data/vault/logs/
-        EOF
-
     - name: Login to DockerHub
       uses: docker/login-action@v3
       with:

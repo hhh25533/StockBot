@@ -7,17 +7,24 @@ import finnhub_client
 from dotenv import load_dotenv
 import logging
 
+# 僅供本機開發使用：檔案不存在時 load_dotenv 不會拋錯、也不影響流程，
+# 正式環境的變數一律由 docker-compose 的 environment 區塊在執行期注入。
 load_dotenv("env/.env")
+
+DEFAULT_LOG_DIR = "/data/vault/logs/"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formater = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-info_handler = logging.FileHandler(str(os.getenv('INFO_LOG_PATH'))+'info.log')
+info_log_path = os.getenv('INFO_LOG_PATH') or DEFAULT_LOG_DIR
+error_log_path = os.getenv('ERROR_LOG_PATH') or DEFAULT_LOG_DIR
+
+info_handler = logging.FileHandler(info_log_path + 'info.log')
 info_handler.setLevel(logging.INFO)
 info_handler.setFormatter(formater)
 
-error_handler = logging.FileHandler(str(os.getenv('ERROR_LOG_PATH'))+'error.log')
+error_handler = logging.FileHandler(error_log_path + 'error.log')
 error_handler.setLevel(logging.ERROR)
 error_handler.setFormatter(formater)
 
@@ -27,7 +34,20 @@ logger.addHandler(info_handler)
 
 logger.info("Bot is running")
 
-app = ApplicationBuilder().token(os.getenv('TELEGRAM_ACCESS_TOKEN')).build()
+# fail-closed：缺少 TELEGRAM_ACCESS_TOKEN 就直接終止，不讓 None 傳進 telegram 套件
+# 內部（那裡拋出的是不易理解的 InvalidToken）。
+telegram_access_token = os.getenv('TELEGRAM_ACCESS_TOKEN')
+if not telegram_access_token:
+    raise RuntimeError(
+        "缺少必要環境變數 TELEGRAM_ACCESS_TOKEN，請在 docker-compose 或執行環境中設定後再啟動。"
+    )
+
+# FINNHUB_API_KEY 只影響 /usprice 這個指令（finnhub_client.get_us_stock_quote 會在缺
+# key 時回覆使用者明確錯誤訊息），不影響整支 bot 的其他指令，因此這裡只記警告，不終止啟動。
+if not os.getenv('FINNHUB_API_KEY'):
+    logger.warning("未設定 FINNHUB_API_KEY，/usprice 指令將無法查詢美股報價。")
+
+app = ApplicationBuilder().token(telegram_access_token).build()
 
 
 # 傳送訊息給使用者

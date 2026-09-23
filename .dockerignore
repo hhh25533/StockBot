@@ -1,0 +1,10 @@
+env/
+src/env/
+.env
+.git/
+.github/
+tests/
+__pycache__/
+*.pyc
+.venv/
+venv/
