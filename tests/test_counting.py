@@ -121,3 +121,21 @@ def test_tse_missing_field_returns_unavailable_message(missing):
 
 def test_tse_dash_price_returns_unavailable_message():
     assert counting.generate_tse_response(_stock(z="-", y="20000.00", n="x")) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+# ---- 0 價、空 list、查無代號常數 ----
+
+def test_zero_real_time_price_returns_unavailable_message():
+    assert counting.generate_response(_stock(**{**FULL, "z": "0.00"})) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+def test_tse_zero_price_returns_unavailable_message():
+    assert counting.generate_tse_response(_stock(z="0.00", y="20000.00", n="x")) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+def test_empty_list_returns_unavailable_message():
+    assert counting.generate_response([]) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+def test_tse_empty_list_returns_unavailable_message():
+    assert counting.generate_tse_response([]) == counting.PRICE_UNAVAILABLE_MESSAGE

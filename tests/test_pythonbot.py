@@ -13,6 +13,16 @@ def _update(text="/price 2330"):
     update = MagicMock()
     update.message.text = text
     update.message.reply_text = AsyncMock()
+    update.effective_message = update.message
+    return update
+
+
+def _edited_update(text="/price 2330"):
+    """使用者編輯訊息：PTB 的 CommandHandler 仍會觸發，但 update.message 是 None。"""
+    update = MagicMock()
+    update.message = None
+    update.effective_message.text = text
+    update.effective_message.reply_text = AsyncMock()
     return update
 
 

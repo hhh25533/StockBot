@@ -47,7 +47,7 @@ def reply_on_failure(handler):
             logger.error('%s error', handler.__name__)
             logger.error(e, exc_info=True)
             try:
-                await update.message.reply_text(FAILURE_MESSAGE)
+                await update.effective_message.reply_text(FAILURE_MESSAGE)
             except Exception:
                 logger.error('%s failure reply error', handler.__name__, exc_info=True)
 
@@ -68,13 +68,13 @@ async def quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # 限制只有特定人才能新增語錄
     # if update.message.from_user.id == YOUR_USER_ID_HERE:
     if True:
-        stock_id = update.message.text[7:].replace('\n', ' ')
+        stock_id = update.effective_message.text[7:].replace('\n', ' ').strip()
         stock_info = counting.get_real_time_stock(stock_id)
         if isinstance(stock_info, str):
-            await update.message.reply_text(stock_info)
+            await update.effective_message.reply_text(stock_info)
             return
 
-        await update.message.reply_text(counting.generate_response(stock_info))
+        await update.effective_message.reply_text(counting.generate_response(stock_info))
 
 
 @reply_on_failure
@@ -82,19 +82,22 @@ async def odd_quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # 限制只有特定人才能新增語錄
     # if update.message.from_user.id == YOUR_USER_ID_HERE:
     if True:
-        stock_id = update.message.text[11:].replace('\n', ' ')
+        stock_id = update.effective_message.text[11:].replace('\n', ' ').strip()
         odd_info = counting.get_real_time_odd(stock_id)
         if isinstance(odd_info, str):
-            await update.message.reply_text(odd_info)
+            await update.effective_message.reply_text(odd_info)
             return
 
-        await update.message.reply_text("零股\n" + counting.generate_response(odd_info))
+        response = counting.generate_response(odd_info)
+        if response != counting.PRICE_UNAVAILABLE_MESSAGE:
+            response = "零股\n" + response
+        await update.effective_message.reply_text(response)
 
 
 @reply_on_failure
 async def tse(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     tse_info = counting.get_real_time_tse()
-    await update.message.reply_text(counting.generate_tse_response(tse_info))
+    await update.effective_message.reply_text(counting.generate_tse_response(tse_info))
 
 
 @reply_on_failure
@@ -102,16 +105,16 @@ async def us_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     symbol = " ".join(context.args)
     us_info = finnhub_client.get_us_stock_quote(symbol)
     if isinstance(us_info, str):
-        await update.message.reply_text(us_info)
+        await update.effective_message.reply_text(us_info)
         return
 
-    await update.message.reply_text(finnhub_client.generate_us_response(us_info))
+    await update.effective_message.reply_text(finnhub_client.generate_us_response(us_info))
 
 
 @reply_on_failure
 async def update_csv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     fetchCode.update_codes()
-    await update.message.reply_text("更新完成")
+    await update.effective_message.reply_text("更新完成")
 
 
 def main() -> None:

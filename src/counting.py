@@ -8,6 +8,7 @@ PACKAGE_DIRECTORY = Path.cwd().parent.joinpath('docs')
 TPEX_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('tpex_equities.csv')
 TWSE_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('twse_equities.csv')
 
+STOCK_NOT_FOUND_MESSAGE = "查無此代號，請確認輸入代號"
 PRICE_UNAVAILABLE_MESSAGE = "目前無法取得成交價（可能為非交易時段），請於交易時間再查詢"
 
 
@@ -16,7 +17,7 @@ def get_stock(stock_id):
         stock = readCSV.read_csv(TWSE_EQUITIES_CSV_PATH, stock_id)
         if stock == "" or stock is None:
             stock = readCSV.read_csv(TPEX_EQUITIES_CSV_PATH, stock_id)
-            if stock == "" or stock is None: return "查無此代號，請確認輸入代號"
+            if stock == "" or stock is None: return STOCK_NOT_FOUND_MESSAGE
     else:
         stock = stock_id
 
@@ -28,36 +29,28 @@ def get_stock(stock_id):
     return stock_key
 
 
-def get_real_time_stock(stock_id):
-
+def _get_real_time_records(stock_id, info_url_template):
     stock_key = get_stock(stock_id)
+    if isinstance(stock_key, str):
+        return stock_key
     if len(stock_key.msgArray) <= 0:
-        return "查無此代號，請確認輸入代號"
+        return STOCK_NOT_FOUND_MESSAGE
 
-    info_url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch={0}".format(stock_key.msgArray[-1].key)
-    res = requests.get(info_url)
-    stock_info = json.loads(json.dumps(res.json()), object_hook=lambda d: SimpleNamespace(**d))
+    res = requests.get(info_url_template.format(stock_key.msgArray[-1].key))
+    info = json.loads(json.dumps(res.json()), object_hook=lambda d: SimpleNamespace(**d))
 
-    if len(stock_info.msgArray) <= 0:
-        return "查無此代號，請確認輸入代號"
+    if len(info.msgArray) <= 0:
+        return STOCK_NOT_FOUND_MESSAGE
 
-    return stock_info.msgArray
+    return info.msgArray
+
+
+def get_real_time_stock(stock_id):
+    return _get_real_time_records(stock_id, "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch={0}")
 
 
 def get_real_time_odd(stock_id):
-
-    stock_key = get_stock(stock_id)
-    if len(stock_key.msgArray) <= 0:
-        return "查無此代號，請確認輸入代號"
-
-    info_url = "https://mis.twse.com.tw/stock/api/getOddInfo.jsp?ex_ch={0}".format(stock_key.msgArray[-1].key)
-    res = requests.get(info_url)
-    odd_info = json.loads(json.dumps(res.json()), object_hook=lambda d: SimpleNamespace(**d))
-
-    if len(odd_info.msgArray) <= 0:
-        return "查無此代號，請確認輸入代號"
-
-    return odd_info.msgArray
+    return _get_real_time_records(stock_id, "https://mis.twse.com.tw/stock/api/getOddInfo.jsp?ex_ch={0}")
 
 
 def get_real_time_tse():
@@ -91,6 +84,8 @@ def rise_emoji(rise):
 
 
 def generate_response(stock_info):
+    if not stock_info:
+        return PRICE_UNAVAILABLE_MESSAGE
     record = stock_info[-1]
     buy_price = get_field(record, "b")
     sale_price = get_field(record, "a")
@@ -106,7 +101,7 @@ def generate_response(stock_info):
 
     real_time_price = to_float(real_time_price)
     yesterday_price = to_float(get_field(record, "y"))
-    if real_time_price is None or not yesterday_price:
+    if not real_time_price or not yesterday_price:
         return PRICE_UNAVAILABLE_MESSAGE
 
     open_price = to_float(get_field(record, "o"))
@@ -125,10 +120,12 @@ def generate_response(stock_info):
 
 
 def generate_tse_response(tse_info):
+    if not tse_info:
+        return PRICE_UNAVAILABLE_MESSAGE
     record = tse_info[-1]
     real_time = to_float(get_field(record, "z"))
     yesterday_price = to_float(get_field(record, "y"))
-    if real_time is None or not yesterday_price:
+    if not real_time or not yesterday_price:
         return PRICE_UNAVAILABLE_MESSAGE
 
     rise = ((real_time - yesterday_price) / yesterday_price) * 100
