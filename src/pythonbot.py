@@ -12,6 +12,7 @@ DEFAULT_LOG_DIR = "/data/vault/logs/"
 
 # 處理指令失敗時回給使用者的訊息；使用者不該遇到「完全沒反應」。
 FAILURE_MESSAGE = "查詢失敗，請稍後再試"
+START_FAILURE_MESSAGE = "目前無法顯示使用說明，請稍後再試"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -36,26 +37,33 @@ def setup_logging() -> None:
     logger.addHandler(info_handler)
 
 
-def reply_on_failure(handler):
+def reply_on_failure(failure_message=FAILURE_MESSAGE):
     """指令處理失敗時：記 log，並回覆使用者一句失敗訊息（回覆本身失敗也不再往外拋）。"""
 
-    @functools.wraps(handler)
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        try:
-            await handler(update, context)
-        except Exception as e:
-            logger.error('%s error', handler.__name__)
-            logger.error(e, exc_info=True)
+    def decorator(handler):
+        @functools.wraps(handler)
+        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             try:
-                await update.effective_message.reply_text(FAILURE_MESSAGE)
-            except Exception:
-                logger.error('%s failure reply error', handler.__name__, exc_info=True)
+                await handler(update, context)
+            except Exception as e:
+                logger.error('%s error', handler.__name__)
+                logger.error(e, exc_info=True)
+                message = update.effective_message
+                if message is None:
+                    logger.error('%s 沒有可回覆的訊息（effective_message 為 None），略過失敗回覆', handler.__name__)
+                    return
+                try:
+                    await message.reply_text(failure_message)
+                except Exception:
+                    logger.error('%s failure reply error', handler.__name__, exc_info=True)
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
 # 傳送訊息給使用者
-@reply_on_failure
+@reply_on_failure(START_FAILURE_MESSAGE)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -63,7 +71,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-@reply_on_failure
+@reply_on_failure()
 async def quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # 限制只有特定人才能新增語錄
     # if update.message.from_user.id == YOUR_USER_ID_HERE:
@@ -77,7 +85,7 @@ async def quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(counting.generate_response(stock_info))
 
 
-@reply_on_failure
+@reply_on_failure()
 async def odd_quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # 限制只有特定人才能新增語錄
     # if update.message.from_user.id == YOUR_USER_ID_HERE:
@@ -94,13 +102,13 @@ async def odd_quoted(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await update.effective_message.reply_text(response)
 
 
-@reply_on_failure
+@reply_on_failure()
 async def tse(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     tse_info = counting.get_real_time_tse()
     await update.effective_message.reply_text(counting.generate_tse_response(tse_info))
 
 
-@reply_on_failure
+@reply_on_failure()
 async def us_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     symbol = " ".join(context.args)
     us_info = finnhub_client.get_us_stock_quote(symbol)
@@ -111,7 +119,7 @@ async def us_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(finnhub_client.generate_us_response(us_info))
 
 
-@reply_on_failure
+@reply_on_failure()
 async def update_csv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     fetchCode.update_codes()
     await update.effective_message.reply_text("更新完成")

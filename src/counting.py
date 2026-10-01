@@ -33,16 +33,19 @@ def _get_real_time_records(stock_id, info_url_template):
     stock_key = get_stock(stock_id)
     if isinstance(stock_key, str):
         return stock_key
-    if len(stock_key.msgArray) <= 0:
+    # TWSE 回錯誤封包（例如只有 rtcode）時沒有 msgArray，一律視為查無，不讓 AttributeError 冒出去
+    stock_msgs = get_field(stock_key, "msgArray")
+    if not stock_msgs or get_field(stock_msgs[-1], "key") is None:
         return STOCK_NOT_FOUND_MESSAGE
 
-    res = requests.get(info_url_template.format(stock_key.msgArray[-1].key))
+    res = requests.get(info_url_template.format(stock_msgs[-1].key))
     info = json.loads(json.dumps(res.json()), object_hook=lambda d: SimpleNamespace(**d))
 
-    if len(info.msgArray) <= 0:
+    info_msgs = get_field(info, "msgArray")
+    if not info_msgs:
         return STOCK_NOT_FOUND_MESSAGE
 
-    return info.msgArray
+    return info_msgs
 
 
 def get_real_time_stock(stock_id):
@@ -91,13 +94,16 @@ def generate_response(stock_info):
     sale_price = get_field(record, "a")
     real_time_price = get_field(record, "z")
     up_low = ""
+    # 買賣價都是 "-"（停牌、無任何委託）時沒有可信的行情，不能落進漲停分支
+    if buy_price == "-" and sale_price == "-":
+        return PRICE_UNAVAILABLE_MESSAGE
     if buy_price == "-":
         real_time_price = get_field(record, "w")
     if sale_price == "-":
         up_low = "🎊"
         real_time_price = get_field(record, "u")
     if real_time_price == "-":
-        real_time_price = str(sale_price).split("_")[0]
+        real_time_price = sale_price.split("_")[0] if isinstance(sale_price, str) else None
 
     real_time_price = to_float(real_time_price)
     yesterday_price = to_float(get_field(record, "y"))

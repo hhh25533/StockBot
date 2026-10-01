@@ -3,6 +3,7 @@
 只 mock 外部邊界（requests.get 與 readCSV.read_csv），不 mock counting 內部函式，
 避免像先前那樣因為 mock 掉受測對象而藏住 get_stock 回傳 str 的缺陷。
 """
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -152,9 +153,63 @@ async def test_edited_message_failure_still_replies_failure_message(monkeypatch)
     reply.assert_awaited_once_with(pythonbot.FAILURE_MESSAGE)
 
 
-async def test_no_effective_message_does_not_raise(monkeypatch):
+async def test_no_effective_message_does_not_raise_nor_log_second_traceback(monkeypatch, caplog):
     monkeypatch.setattr(counting.requests, "get", MagicMock(side_effect=RuntimeError("net")))
     update = MagicMock()
     update.message = None
     update.effective_message = None
-    await pythonbot.quoted(update, MagicMock())  # 不得拋出
+    with caplog.at_level(logging.ERROR, logger=pythonbot.logger.name):
+        await pythonbot.quoted(update, MagicMock())  # 不得拋出
+    # 沒有可回覆的訊息時只記一行 log，不得再多印一段「回覆失敗」的 traceback
+    assert not [r for r in caplog.records if "failure reply error" in r.getMessage()]
+    assert [r for r in caplog.records if "沒有可回覆的訊息" in r.getMessage()]
+
+
+# ---- TWSE 回錯誤封包（沒有 msgArray）：視為查無，不得變成「查詢失敗」 ----
+
+def _fake_get(by_endpoint):
+    def get(url, *args, **kwargs):
+        for marker, payload in by_endpoint.items():
+            if marker in url:
+                return MagicMock(json=lambda payload=payload: payload)
+        raise AssertionError("unexpected url " + url)
+    return get
+
+
+ERROR_PAYLOAD = {"rtcode": "9999", "rtmessage": "查無符合之資料"}
+
+
+@pytest.mark.parametrize("command,handler_name", [("/price 2330", "quoted"), ("/odd_price 2330", "odd_quoted")])
+async def test_error_payload_from_get_stock_replies_not_found(monkeypatch, command, handler_name):
+    monkeypatch.setattr(counting.requests, "get", _fake_get({"getStock.jsp": ERROR_PAYLOAD}))
+    update, reply = _update(command)
+    await getattr(pythonbot, handler_name)(update, MagicMock())
+    reply.assert_awaited_once_with(NOT_FOUND)
+
+
+@pytest.mark.parametrize("command,handler_name", [("/price 2330", "quoted"), ("/odd_price 2330", "odd_quoted")])
+async def test_error_payload_from_info_endpoint_replies_not_found(monkeypatch, command, handler_name):
+    monkeypatch.setattr(counting.requests, "get", _fake_get({
+        "getStock.jsp": {"msgArray": [{"key": "tse_2330.tw"}]},
+        "Info.jsp": ERROR_PAYLOAD,
+    }))
+    update, reply = _update(command)
+    await getattr(pythonbot, handler_name)(update, MagicMock())
+    reply.assert_awaited_once_with(NOT_FOUND)
+
+
+async def test_stock_entry_without_key_replies_not_found(monkeypatch):
+    monkeypatch.setattr(counting.requests, "get", _fake_get({"getStock.jsp": {"msgArray": [{"ch": "2330.tw"}]}}))
+    update, reply = _update("/price 2330")
+    await pythonbot.quoted(update, MagicMock())
+    reply.assert_awaited_once_with(NOT_FOUND)
+
+
+# ---- 買賣價都是 "-"（停牌）端到端 ----
+
+async def test_price_both_sides_dash_replies_unavailable(monkeypatch):
+    fake = FakeTwse([{**QUOTE, "b": "-", "a": "-", "z": "-", "u": "110.00", "w": "90.00"}])
+    monkeypatch.setattr(counting.requests, "get", fake.get)
+    update, reply = _update("/price 2330")
+    await pythonbot.quoted(update, MagicMock())
+    reply.assert_awaited_once_with(counting.PRICE_UNAVAILABLE_MESSAGE)

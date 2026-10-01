@@ -139,3 +139,20 @@ def test_empty_list_returns_unavailable_message():
 
 def test_tse_empty_list_returns_unavailable_message():
     assert counting.generate_tse_response([]) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+# ---- 買賣價都是 "-"：不得落進漲停分支 ----
+
+def test_both_buy_and_sale_dash_returns_unavailable_message():
+    data = {**FULL, "b": "-", "a": "-", "z": "-", "u": "110.00", "w": "90.00"}
+    assert counting.generate_response(_stock(**data)) == counting.PRICE_UNAVAILABLE_MESSAGE
+
+
+def test_only_sale_dash_keeps_limit_up_behaviour():
+    out = counting.generate_response(_stock(**{**FULL, "a": "-", "u": "110.00"}))
+    assert "110.00" in out and "10.00%" in out and "🎊📈" in out
+
+
+def test_only_buy_dash_keeps_limit_down_behaviour():
+    out = counting.generate_response(_stock(**{**FULL, "b": "-", "w": "90.00", "z": "-"}))
+    assert "90.00" in out and "-10.00%" in out and "📉" in out

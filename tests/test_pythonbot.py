@@ -17,15 +17,6 @@ def _update(text="/price 2330"):
     return update
 
 
-def _edited_update(text="/price 2330"):
-    """使用者編輯訊息：PTB 的 CommandHandler 仍會觸發，但 update.message 是 None。"""
-    update = MagicMock()
-    update.message = None
-    update.effective_message.text = text
-    update.effective_message.reply_text = AsyncMock()
-    return update
-
-
 def _records(**fields):
     return json.loads(json.dumps([fields]), object_hook=lambda d: SimpleNamespace(**d))
 
@@ -210,7 +201,7 @@ async def test_start_failure_replies_to_user():
 
     await pythonbot.start(update, context)
 
-    update.message.reply_text.assert_awaited_once_with(pythonbot.FAILURE_MESSAGE)
+    update.message.reply_text.assert_awaited_once_with(pythonbot.START_FAILURE_MESSAGE)
 
 
 # ---- main (fail-closed 啟動檢查) ----
