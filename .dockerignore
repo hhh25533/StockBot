@@ -8,3 +8,5 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+# deploy/ 含部署用憑證，不得被 COPY 進 image
+deploy/
