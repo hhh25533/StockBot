@@ -8,6 +8,8 @@ PACKAGE_DIRECTORY = Path.cwd().parent.joinpath('docs')
 TPEX_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('tpex_equities.csv')
 TWSE_EQUITIES_CSV_PATH = PACKAGE_DIRECTORY.joinpath('twse_equities.csv')
 
+PRICE_UNAVAILABLE_MESSAGE = "目前無法取得成交價（可能為非交易時段），請於交易時間再查詢"
+
 
 def get_stock(stock_id):
     if not str(stock_id).isnumeric():
@@ -67,33 +69,72 @@ def get_real_time_tse():
     return tse.infoArray
 
 
+def get_field(record, name, default=None):
+    """TWSE 回傳的欄位依時段而異（例如非交易時段沒有買賣價），缺欄位時回傳 default 而不是拋 AttributeError。"""
+    return getattr(record, name, default)
+
+
+def to_float(value):
+    """無法轉成數字（缺欄位、"-"、空字串）時回傳 None。"""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def rise_emoji(rise):
+    if rise < 0:
+        return "📉"
+    if rise > 0:
+        return "📈"
+    return ""
+
+
 def generate_response(stock_info):
-    buy_price = stock_info[-1].b
-    sale_price = stock_info[-1].a
-    real_time_price = stock_info[-1].z
-    open_price = stock_info[-1].o
-    yesterday_price = stock_info[-1].y
+    record = stock_info[-1]
+    buy_price = get_field(record, "b")
+    sale_price = get_field(record, "a")
+    real_time_price = get_field(record, "z")
     up_low = ""
     if buy_price == "-":
-        real_time_price = stock_info[-1].w
+        real_time_price = get_field(record, "w")
     if sale_price == "-":
         up_low = "🎊"
-        real_time_price = stock_info[-1].u
+        real_time_price = get_field(record, "u")
     if real_time_price == "-":
-        real_time_price = stock_info[-1].a.split("_")[0]
-    rise = ((float(real_time_price) - float(yesterday_price)) / float(yesterday_price)) * 100
-    if rise < 0:
-        up_low = "📉"
-    if rise > 0:
-        up_low += "📈"
+        real_time_price = str(sale_price).split("_")[0]
 
-    response_string = "{id} {name} 開盤：{openPrice:.2f} \n當盤成交價 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} " \
+    real_time_price = to_float(real_time_price)
+    yesterday_price = to_float(get_field(record, "y"))
+    if real_time_price is None or not yesterday_price:
+        return PRICE_UNAVAILABLE_MESSAGE
+
+    open_price = to_float(get_field(record, "o"))
+    rise = ((real_time_price - yesterday_price) / yesterday_price) * 100
+    # 跌時以 📉 取代 🎊，漲時附加 📈，持平時維持原樣
+    up_low = rise_emoji(rise) if rise < 0 else up_low + rise_emoji(rise)
+
+    return "{id} {name} 開盤：{openPrice} \n當盤成交價 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} " \
         .format(
-        id=stock_info[-1].c,
-        name=stock_info[-1].n,
-        openPrice=float(open_price),
-        realPrice=float(real_time_price),
+        id=get_field(record, "c", ""),
+        name=get_field(record, "n", ""),
+        openPrice="-" if open_price is None else "{:.2f}".format(open_price),
+        realPrice=real_time_price,
         priceRise=rise,
         uplow=up_low)
 
-    return response_string
+
+def generate_tse_response(tse_info):
+    record = tse_info[-1]
+    real_time = to_float(get_field(record, "z"))
+    yesterday_price = to_float(get_field(record, "y"))
+    if real_time is None or not yesterday_price:
+        return PRICE_UNAVAILABLE_MESSAGE
+
+    rise = ((real_time - yesterday_price) / yesterday_price) * 100
+
+    return "大盤 {name} \n大盤指數 : {realPrice:.2f} \t{priceRise:.2f}% {uplow} ".format(
+        name=get_field(record, "n", ""),
+        realPrice=real_time,
+        priceRise=rise,
+        uplow=rise_emoji(rise))

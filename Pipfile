@@ -12,6 +12,7 @@ python-dotenv = "==1.2.2"
 
 [dev-packages]
 pytest = "*"
+pytest-asyncio = "*"
 
 [requires]
 python_version = "3.11"
